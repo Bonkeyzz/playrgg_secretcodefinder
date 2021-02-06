@@ -20,8 +20,9 @@ import colorama
 # region ARGPARSER
 if __name__ == "__main__":
 	argparser = argparse.ArgumentParser()
-	argparser.add_argument("--mode", "-m", help="t = twitter, d = discord.", type=str)
+	argparser.add_argument("--mode", "-m", help="t = twitter, d = discord, b = hybrid", type=str)
 	argparser.add_argument("--prize", "-p", help="Finds all codes that have a specific prize.", type=str)
+	argparser.add_argument("--id", "-i", help="Finds all codes that have a specific giveaway id.", type=str)
 	try:
 		args = argparser.parse_args()
 	except:
@@ -57,22 +58,21 @@ def ParseSecretCodeAlertTweets(tweets_arr):
 			if "SECRET CODE ALERT" in tweet_content:
 				SecrCodeMatch = re.findall(CODE_REGEX, tweet_content, re.MULTILINE)
 				PrizeName = deEmojify(re.findall(r'🎁.+', tweet_content_emoj,
-                                     re.MULTILINE)[0]).lstrip().replace(" (See Details)", "")
+									 re.MULTILINE)[0]).lstrip().replace(" (See Details)", "")
 				EntryURL = tweet.entities['urls'][0]['expanded_url']
 				if SecrCodeMatch:
 					SecretCode = SecrCodeMatch[0][0]
 					NumOfEntries = SecrCodeMatch[0][1]
-					if args.prize is None:
-						SecrCodeTweets.append(
-							f'Code: {SecretCode}, Prize: \'{PrizeName}\', Entries: {NumOfEntries}, URL: {EntryURL}')
-					else:
-						if args.prize in PrizeName:
-							SecrCodeTweets.append(
-								f'Code: {SecretCode}, Entries: {NumOfEntries}, URL: {EntryURL}')
+					if args.prize is None and args.id is None:
+							SecrCodeTweets.append(f'Code: {SecretCode}, Prize: \'{PrizeName}\', Entries: {NumOfEntries}, URL: {EntryURL}')				
+					elif args.prize is not None and args.prize in PrizeName:
+							SecrCodeTweets.append(f'Code: {SecretCode}, Entries: {NumOfEntries}, URL: {EntryURL}')
+					elif args.id is not None and args.id in EntryURL:
+							SecrCodeTweets.append(f'Code: {SecretCode}, Entries: {NumOfEntries}')
 				else:  # Automatic secret code entry URLS
-					if args.prize is None:
+					if args.prize is None and args.id is None:
 						SecrCodeTweets.append(f'[AE] Prize: \'{PrizeName}\', URL: {EntryURL}')
-					else:
+					elif args.prize in PrizeName or args.id in EntryURL:
   						SecrCodeTweets.append(f'[AE] URL: {EntryURL}')
 	return SecrCodeTweets
 # endregion
@@ -103,23 +103,29 @@ async def parseSecretCodeMsgs(channelMsg_array):
 		SecretCode = SecCodeAndEntryRegex[0]
 		NumOfEntries = SecCodeAndEntryRegex[1]
 		EntryURL = re.findall(URLRegex, msgContent, re.MULTILINE)[0]
-		if args.prize is None:
+		if args.prize is None and args.id is None:
 			retList.append(f'Code: {SecretCode}, Prize: \'{Prize}\', Entries: {NumOfEntries}, URL: {EntryURL}')
-		elif args.prize in Prize:
+		elif args.prize is not None and args.prize in Prize:
 			retList.append(f'Code: {SecretCode}, Entries: {NumOfEntries}, URL: {EntryURL}')
+		elif args.id is not None and args.id in EntryURL:
+			retList.append(f'Code: {SecretCode}, Entries: {NumOfEntries}')	
 	return retList
 		
 
 @SelfBot.event
 async def on_ready():
-	print(colored(f'Bot is on ( ͡° ͜ʖ ͡°)\nLogged in as: {SelfBot.user}', 'green'))
+	if args.mode != "b":
+    		print(colored(f'Bot is on ( ͡° ͜ʖ ͡°)\nLogged in as: {SelfBot.user}', 'green'))
 	channelMsgs = await getChannelMsgs(679381560104845332) # You must be in the Playr.gg discord server for this to work!!!
 	codeList = await parseSecretCodeMsgs(channelMsgs)
 	if not codeList:
-    		print(colored('[*] No codes found! Try again later.', 'red'))
+			print(colored('[*] [D] No codes found! Try again later.', 'red'))
 	for code in codeList:
-			print(colored(f'[{codeList.index(code)}] {code}', 'yellow'))
-	print(colored("[!] Done! logging out of discord...", 'cyan'))
+			if args.mode != "b":
+				print(colored(f'[{codeList.index(code)}] {code}', 'yellow'))
+			else:
+				print(colored(f'[D] [{codeList.index(code)}] {code}', 'yellow'))	
+	print(colored("[!] [D] Done! logging out of discord...", 'cyan'))
 	await SelfBot.close()
 	time.sleep(1)
 
@@ -143,7 +149,7 @@ if __name__ == "__main__":
 		tweets = tweepy_GetTweetsFromID("PLAYRgg", 200)
 		processed_tweets = ParseSecretCodeAlertTweets(tweets)
 		if not processed_tweets:
-    			print(colored('[*] No tweets found! Try again later.', 'red'))
+				print(colored('[*] No tweets found! Try again later.', 'red'))
 		for tweet in processed_tweets:
 				print(colored(f'[{processed_tweets.index(tweet)}] {tweet}', 'yellow'))
 		print(colored("[!] Done! Exitting...", 'cyan'))
@@ -151,6 +157,24 @@ if __name__ == "__main__":
 		print(colored("[!] Mode: Discord", 'magenta'))
 		DISCORD_API_TOKEN = privKeys['DISCORD_API_TOKEN']
 		print(colored("[!] Initializing discord selfbot...", 'cyan'))
+		SelfBot.run(DISCORD_API_TOKEN, bot=False)
+	elif args.mode == "b":
+		privTwitterKeys = privKeys['twitterapi']
+		API_KEY = privTwitterKeys['API_KEY']
+		API_SECRET = privTwitterKeys['API_SECRET']
+		ACCESS_TOKEN = privTwitterKeys['ACCESS_TOKEN']
+		ACCESS_TOKEN_SECRET = privTwitterKeys['ACCESS_TOKEN_SECRET']
+
+		TweepyAuth = tweepy.OAuthHandler(API_KEY, API_SECRET)
+		TweepyAuth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+		TweepyAPI = tweepy.API(TweepyAuth)
+		tweets = tweepy_GetTweetsFromID("PLAYRgg", 200)
+		processed_tweets = ParseSecretCodeAlertTweets(tweets)
+		if not processed_tweets:
+				print(colored('[*] [T] No tweets found! Try again later.', 'red'))
+		for tweet in processed_tweets:
+				print(colored(f'[T] [{processed_tweets.index(tweet)}] {tweet}', 'yellow'))	
+		DISCORD_API_TOKEN = privKeys['DISCORD_API_TOKEN']
 		SelfBot.run(DISCORD_API_TOKEN, bot=False)
 	else:
 		argparser.print_help()
