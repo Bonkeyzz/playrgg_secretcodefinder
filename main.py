@@ -15,6 +15,7 @@ import time
 import discord
 import argparse
 import sys
+import colorama
 
 # region ARGPARSER
 if __name__ == "__main__":
@@ -123,7 +124,7 @@ async def on_ready():
 	time.sleep(1)
 
 # endregion
-
+colorama.init()
 if __name__ == "__main__":
 	with open('keys.json') as f:
 		privKeys = load(f)
