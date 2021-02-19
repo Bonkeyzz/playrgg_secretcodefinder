@@ -13,7 +13,7 @@ optional arguments:
   --id ID, -i ID        Finds all codes that have a specific giveaway id.
 ```
 
-**This bot only finds secret codes either from [PLAYRgg's](https://twitter.com/PLAYRgg) twitter or the secret-codes channel in Playrgg's discord server.**
+**This script only finds secret codes either from [PLAYRgg's](https://twitter.com/PLAYRgg) twitter or the secret-codes channel in Playrgg's discord server.**
 
 ## Setting up
 
