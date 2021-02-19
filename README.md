@@ -9,7 +9,7 @@ optional arguments:
   -h, --help            show this help message and exit
   --mode MODE, -m MODE  t = twitter, d = discord, b = hybrid
   --prize PRIZE, -p PRIZE
-                        Finds all codes that have a specific prize.
+                        Finds all codes that have a specific prize name.
   --id ID, -i ID        Finds all codes that have a specific giveaway id.
 ```
 
