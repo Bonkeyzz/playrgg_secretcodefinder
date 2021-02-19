@@ -13,13 +13,15 @@ optional arguments:
   --id ID, -i ID        Finds all codes that have a specific giveaway id.
 ```
 
+**This bot only finds secret codes from either [PLAYRgg's](https://twitter.com/PLAYRgg) twitter or the secret-codes channel in Playrgg's discord server.**
 
 ## Setting up
 
 Before using this script you need to fill the stuff in the keys.json file
 
-
 * `DISCORD_API_TOKEN` is your discord token. This script makes a self-bot that only reads the messages from the secret code channel. To get it you need to follow [this](https://www.youtube.com/watch?v=YEgFvgg7ZPI) guide.
+
+**Make sure you are in the Playrgg discord server if you want the discord self-bot part to work!!**
 
 * `API_KEY` is twitter API key
 * `API_SECRET` is twitter API secret
