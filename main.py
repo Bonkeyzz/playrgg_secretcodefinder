@@ -98,7 +98,7 @@ async def parseSecretCodeMsgs(channelMsg_array):
 	for msg in channelMsg_array:
 		msgContent: str = msg.content
 		msgContent = msgContent.replace("**", "").replace("  ", " ")
-		Prize = re.findall(PrizeRegex, msgContent, re.MULTILINE)[0][1].replace("\n", "")
+		Prize = re.findall(PrizeRegex, msgContent, re.MULTILINE)[0][1].replace("\n", "").replace("(See Details)", "")
 		SecCodeAndEntryRegex = re.findall(CodeAndEntryNumRegex, msgContent, re.MULTILINE)[0]
 		SecretCode = SecCodeAndEntryRegex[0]
 		NumOfEntries = SecCodeAndEntryRegex[1]
@@ -131,21 +131,22 @@ async def on_ready():
 
 # endregion
 colorama.init()
+
+# Very messy code below..
 if __name__ == "__main__":
 	with open('keys.json') as f:
 		privKeys = load(f)
-	
-	if args.mode == "t":
-		print(colored("[!] Mode: Twitter", 'magenta'))
 		privTwitterKeys = privKeys['twitterapi']
 		API_KEY = privTwitterKeys['API_KEY']
 		API_SECRET = privTwitterKeys['API_SECRET']
 		ACCESS_TOKEN = privTwitterKeys['ACCESS_TOKEN']
 		ACCESS_TOKEN_SECRET = privTwitterKeys['ACCESS_TOKEN_SECRET']
-
 		TweepyAuth = tweepy.OAuthHandler(API_KEY, API_SECRET)
 		TweepyAuth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 		TweepyAPI = tweepy.API(TweepyAuth)
+
+	if args.mode == "t":
+		print(colored("[!] Mode: Twitter", 'magenta'))
 		tweets = tweepy_GetTweetsFromID("PLAYRgg", 200)
 		processed_tweets = ParseSecretCodeAlertTweets(tweets)
 		if not processed_tweets:
@@ -159,15 +160,6 @@ if __name__ == "__main__":
 		print(colored("[!] Initializing discord selfbot...", 'cyan'))
 		SelfBot.run(DISCORD_API_TOKEN, bot=False)
 	elif args.mode == "b":
-		privTwitterKeys = privKeys['twitterapi']
-		API_KEY = privTwitterKeys['API_KEY']
-		API_SECRET = privTwitterKeys['API_SECRET']
-		ACCESS_TOKEN = privTwitterKeys['ACCESS_TOKEN']
-		ACCESS_TOKEN_SECRET = privTwitterKeys['ACCESS_TOKEN_SECRET']
-
-		TweepyAuth = tweepy.OAuthHandler(API_KEY, API_SECRET)
-		TweepyAuth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-		TweepyAPI = tweepy.API(TweepyAuth)
 		tweets = tweepy_GetTweetsFromID("PLAYRgg", 200)
 		processed_tweets = ParseSecretCodeAlertTweets(tweets)
 		if not processed_tweets:
